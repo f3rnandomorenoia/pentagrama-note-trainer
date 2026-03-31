@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pentagrama Piano Trainer</title>
+    <meta
+      name="description"
+      content="Portal principal para practicar las notas del pentagrama en piano con niveles estáticos para GitHub Pages."
+    />
+    <link rel="stylesheet" href="./assets/css/styles.css" />
+  </head>
+  <body class="landing-page">
+    <div class="app-shell landing-shell">
+      <header class="hero hero-landing">
+        <div>
+          <p class="eyebrow">Lectura musical para piano</p>
+          <h1>Pentagrama Piano Trainer</h1>
+          <p class="hero-copy">
+            Una web principal que te lleva a páginas estáticas separadas por nivel,
+            pensada para GitHub Pages y para memorizar de verdad dónde cae cada nota
+            en clave de sol y clave de fa.
+          </p>
+        </div>
+        <div class="hero-card">
+          <span class="hero-card-label">Formato del proyecto</span>
+          <strong>5</strong>
+          <span class="hero-card-meta">niveles enlazados + JS compartido</span>
+        </div>
+      </header>
+
+      <section class="panel landing-panel">
+        <div class="landing-section-head">
+          <div>
+            <p class="eyebrow">Elige tu punto de entrada</p>
+            <h2>Niveles disponibles</h2>
+          </div>
+          <p class="landing-section-copy">
+            Cada nivel tiene su propia página HTML, pero todos comparten el mismo
+            motor del juego y los mismos estilos.
+          </p>
+        </div>
+
+        <div class="landing-grid">
+          <a class="level-card" href="./niveles/nivel-1.html">
+            <span class="level-card-step">Nivel 1</span>
+            <h3>Clave de sol básica</h3>
+            <p>Notas naturales dentro del pentagrama en clave de sol, ritmo tranquilo.</p>
+            <ul>
+              <li>Clave de sol</li>
+              <li>Sin alteraciones</li>
+              <li>Ideal para empezar</li>
+            </ul>
+            <span class="level-card-cta">Abrir nivel →</span>
+          </a>
+
+          <a class="level-card" href="./niveles/nivel-2.html">
+            <span class="level-card-step">Nivel 2</span>
+            <h3>Clave de fa básica</h3>
+            <p>La misma idea, pero bajando al registro de la mano izquierda.</p>
+            <ul>
+              <li>Clave de fa</li>
+              <li>Sin alteraciones</li>
+              <li>Enfoque bajo</li>
+            </ul>
+            <span class="level-card-cta">Abrir nivel →</span>
+          </a>
+
+          <a class="level-card" href="./niveles/nivel-3.html">
+            <span class="level-card-step">Nivel 3</span>
+            <h3>Mezcla de claves</h3>
+            <p>Alterna entre sol y fa para forzar reconocimiento rápido.</p>
+            <ul>
+              <li>Sol + fa</li>
+              <li>Más velocidad</li>
+              <li>Cambio mental de clave</li>
+            </ul>
+            <span class="level-card-cta">Abrir nivel →</span>
+          </a>
+
+          <a class="level-card" href="./niveles/nivel-4.html">
+            <span class="level-card-step">Nivel 4</span>
+            <h3>Rango ampliado</h3>
+            <p>Empiezan las líneas adicionales por arriba y por abajo.</p>
+            <ul>
+              <li>Líneas adicionales</li>
+              <li>Mayor rango</li>
+              <li>Respuesta más rápida</li>
+            </ul>
+            <span class="level-card-cta">Abrir nivel →</span>
+          </a>
+
+          <a class="level-card" href="./niveles/nivel-5.html">
+            <span class="level-card-step">Nivel 5</span>
+            <h3>Alteraciones</h3>
+            <p>Introduce sostenidos y bemoles para rematar el entrenamiento.</p>
+            <ul>
+              <li>Sostenidos y bemoles</li>
+              <li>Sol + fa</li>
+              <li>Modo avanzado</li>
+            </ul>
+            <span class="level-card-cta">Abrir nivel →</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="panel info-panel">
+        <div class="info-grid">
+          <article class="info-card">
+            <p class="eyebrow">Mecánica</p>
+            <h3>Línea vertical en movimiento</h3>
+            <p>
+              La línea avanza hacia la nota. Cuando la toca, eliges abajo el nombre
+              correcto con la alteración que corresponda.
+            </p>
+          </article>
+          <article class="info-card">
+            <p class="eyebrow">Puntuación</p>
+            <h3>Aprender jugando</h3>
+            <p>
+              Cada acierto suma <strong>10 puntos</strong> y cada fallo resta
+              <strong>5</strong>. Las mejores sesiones se guardan en localStorage.
+            </p>
+          </article>
+          <article class="info-card">
+            <p class="eyebrow">Modos</p>
+            <h3>Práctica y desafío</h3>
+            <p>
+              En práctica tienes feedback más relajado. En desafío, si tardas,
+              también penaliza y la siguiente nota llega sola.
+            </p>
+          </article>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

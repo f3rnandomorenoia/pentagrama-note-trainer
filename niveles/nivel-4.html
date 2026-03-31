@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nivel 4 · Rango ampliado</title>
+    <meta
+      name="description"
+      content="Entrenamiento de notas con líneas adicionales y rango ampliado. Nivel 4 del Pentagrama Piano Trainer."
+    />
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="trainer-page" data-level-id="nivel-4">
+    <div class="app-shell">
+      <header class="hero trainer-hero">
+        <div>
+          <p class="eyebrow">Nivel 4</p>
+          <h1>Rango ampliado</h1>
+          <p class="hero-copy">
+            Aquí ya aparecen líneas adicionales por arriba y por abajo. Es el punto
+            donde de verdad se consolida la geometría del pentagrama.
+          </p>
+        </div>
+        <div class="hero-card">
+          <span id="best-score-label" class="hero-card-label">Mejor puntuación del nivel</span>
+          <strong id="best-score">0</strong>
+          <span id="best-run" class="hero-card-meta">Sin sesiones guardadas</span>
+        </div>
+      </header>
+
+      <section class="panel level-links-panel">
+        <div class="level-links-head">
+          <div>
+            <p class="eyebrow">Navegación</p>
+            <h2>Salta de nivel o vuelve al inicio</h2>
+          </div>
+          <a class="home-link" href="../index.html">← Web principal</a>
+        </div>
+        <nav id="level-links" class="level-links" aria-label="Niveles"></nav>
+      </section>
+
+      <main class="layout">
+        <aside class="panel controls-panel">
+          <section>
+            <h2>Sesión</h2>
+            <div class="control-group">
+              <label for="mode-select">Modo</label>
+              <select id="mode-select">
+                <option value="practice">Práctica guiada</option>
+                <option value="challenge">Desafío</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="level-select">Página de nivel</label>
+              <select id="level-select"></select>
+              <small class="control-help">Cambiar aquí abre la página HTML de ese nivel.</small>
+            </div>
+          </section>
+
+          <section>
+            <h2>Marcador</h2>
+            <div class="stats-grid">
+              <div class="stat-card accent">
+                <span>Puntos</span>
+                <strong id="score-value">0</strong>
+              </div>
+              <div class="stat-card">
+                <span>Aciertos</span>
+                <strong id="hits-value">0</strong>
+              </div>
+              <div class="stat-card">
+                <span>Fallos</span>
+                <strong id="misses-value">0</strong>
+              </div>
+              <div class="stat-card">
+                <span>Racha</span>
+                <strong id="streak-value">0</strong>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2>Estado</h2>
+            <p id="status-text" class="status-text">Pulsa empezar para lanzar tu primera nota.</p>
+            <div class="button-row">
+              <button id="start-button" class="primary-button">Empezar</button>
+              <button id="next-button" class="secondary-button" disabled>Siguiente nota</button>
+            </div>
+          </section>
+        </aside>
+
+        <section class="panel play-panel">
+          <div class="play-header">
+            <div>
+              <p class="play-label">Objetivo actual</p>
+              <h2 id="round-title">Esperando nueva ronda</h2>
+            </div>
+            <div class="chip-row">
+              <span id="clef-chip" class="chip">Clave: -</span>
+              <span id="level-chip" class="chip">Nivel: -</span>
+            </div>
+          </div>
+
+          <div class="staff-stage">
+            <svg id="staff-svg" viewBox="0 0 760 260" role="img" aria-label="Pentagrama con una nota objetivo"></svg>
+            <div class="timing-caption">Responde cuando la línea vertical toque la nota.</div>
+          </div>
+
+          <div id="feedback-card" class="feedback-card neutral">
+            <p class="feedback-label">Feedback</p>
+            <h3 id="feedback-title">Listo para practicar</h3>
+            <p id="feedback-body">
+              Verás una nota en el pentagrama y deberás identificarla usando los botones de abajo.
+            </p>
+          </div>
+
+          <section class="answers-panel">
+            <div class="answers-header">
+              <h3>Respuestas</h3>
+              <p id="answers-help">Elige el nombre correcto de la nota cuando llegue la línea.</p>
+            </div>
+            <div id="answer-buttons" class="answer-buttons" aria-live="polite"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="../assets/js/app.js"></script>
+  </body>
+</html>

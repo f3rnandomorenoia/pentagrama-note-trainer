@@ -1,0 +1,81 @@
+export const LEVELS = [
+  {
+    id: "nivel-1",
+    name: "Nivel 1 · Clave de sol básica",
+    description: "Notas naturales en clave de sol dentro del pentagrama.",
+    clefs: ["treble"],
+    notePool: ["E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5", "F5"],
+    answerSet: ["C", "D", "E", "F", "G", "A", "B"],
+    lineDurationMs: 3600,
+    responseWindowMs: null,
+    allowAccidentals: false,
+  },
+  {
+    id: "nivel-2",
+    name: "Nivel 2 · Clave de fa básica",
+    description: "Notas naturales en clave de fa dentro del pentagrama.",
+    clefs: ["bass"],
+    notePool: ["G2", "A2", "B2", "C3", "D3", "E3", "F3", "G3", "A3"],
+    answerSet: ["C", "D", "E", "F", "G", "A", "B"],
+    lineDurationMs: 3300,
+    responseWindowMs: null,
+    allowAccidentals: false,
+  },
+  {
+    id: "nivel-3",
+    name: "Nivel 3 · Mezcla de claves",
+    description: "Alterna entre clave de sol y clave de fa.",
+    clefs: ["treble", "bass"],
+    notePool: {
+      treble: ["E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5", "F5"],
+      bass: ["G2", "A2", "B2", "C3", "D3", "E3", "F3", "G3", "A3"],
+    },
+    answerSet: ["C", "D", "E", "F", "G", "A", "B"],
+    lineDurationMs: 2800,
+    responseWindowMs: 2200,
+    allowAccidentals: false,
+  },
+  {
+    id: "nivel-4",
+    name: "Nivel 4 · Rango ampliado",
+    description: "Añade líneas adicionales por arriba y por abajo.",
+    clefs: ["treble", "bass"],
+    notePool: {
+      treble: ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5", "F5", "G5", "A5"],
+      bass: ["E2", "F2", "G2", "A2", "B2", "C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"],
+    },
+    answerSet: ["C", "D", "E", "F", "G", "A", "B"],
+    lineDurationMs: 2300,
+    responseWindowMs: 1800,
+    allowAccidentals: false,
+  },
+  {
+    id: "nivel-5",
+    name: "Nivel 5 · Alteraciones",
+    description: "Incluye sostenidos y bemoles.",
+    clefs: ["treble", "bass"],
+    notePool: {
+      treble: ["C4", "D4", "E4", "F4", "F#4", "Gb4", "A4", "Bb4", "B4", "C5", "C#5", "Eb5", "F5", "G5"],
+      bass: ["E2", "F2", "F#2", "G2", "Ab2", "B2", "C3", "D3", "Eb3", "E3", "F3", "G3", "A3", "Bb3", "B3"],
+    },
+    answerSet: ["C", "C#", "Db", "D", "Eb", "E", "F", "F#", "Gb", "G", "Ab", "A", "Bb", "B"],
+    lineDurationMs: 1900,
+    responseWindowMs: 1500,
+    allowAccidentals: true,
+  },
+];
+
+export const MODE_CONFIG = {
+  practice: {
+    id: "practice",
+    label: "Práctica guiada",
+    description: "Feedback detallado, sin tiempo límite para responder después de la llegada.",
+    responseWindowMultiplier: null,
+  },
+  challenge: {
+    id: "challenge",
+    label: "Desafío",
+    description: "Ritmo continuo y penalización si dejas pasar la nota.",
+    responseWindowMultiplier: 1,
+  },
+};

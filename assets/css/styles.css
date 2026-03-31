@@ -371,10 +371,59 @@ select:hover {
   font-size: 0.95rem;
 }
 
+.last-note-card,
 .feedback-card {
   padding: 18px;
   border-radius: 22px;
   border: 1px solid rgba(87, 63, 37, 0.12);
+}
+
+.last-note-card {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 250, 244, 0.94);
+  box-shadow: 0 16px 30px rgba(70, 43, 19, 0.1);
+}
+
+.last-note-card::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 8px;
+  border-radius: 22px 0 0 22px;
+  background: rgba(107, 93, 81, 0.2);
+}
+
+.last-note-card.neutral::after {
+  background: rgba(107, 93, 81, 0.28);
+}
+
+.last-note-card.success {
+  background: linear-gradient(135deg, rgba(31, 122, 82, 0.18), rgba(245, 255, 249, 0.96));
+  border-color: rgba(31, 122, 82, 0.38);
+}
+
+.last-note-card.success::after {
+  background: var(--success);
+}
+
+.last-note-card.error {
+  background: linear-gradient(135deg, rgba(171, 47, 47, 0.18), rgba(255, 247, 247, 0.96));
+  border-color: rgba(171, 47, 47, 0.34);
+}
+
+.last-note-card.error::after {
+  background: var(--danger);
+}
+
+.last-note-card h3 {
+  margin: 0 0 8px;
+  font-size: clamp(1.08rem, 2vw, 1.35rem);
+}
+
+.last-note-card p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
 }
 
 .feedback-card.neutral {
@@ -453,11 +502,13 @@ select:hover {
 .answer-button.correct {
   background: rgba(31, 122, 82, 0.14);
   border-color: rgba(31, 122, 82, 0.4);
+  box-shadow: 0 0 0 2px rgba(31, 122, 82, 0.14);
 }
 
 .answer-button.wrong {
   background: rgba(171, 47, 47, 0.12);
   border-color: rgba(171, 47, 47, 0.34);
+  box-shadow: 0 0 0 2px rgba(171, 47, 47, 0.12);
 }
 
 .trainer-page.session-active .trainer-hero,
@@ -869,9 +920,25 @@ small.control-help {
     background: rgba(255, 252, 248, 0.92);
   }
 
+  .trainer-page.session-active .last-note-card {
+    padding: 10px 12px;
+    border-radius: 18px;
+    background: rgba(255, 252, 247, 0.96);
+  }
+
   .trainer-page.session-active .feedback-card h3 {
     margin: 0;
     font-size: 0.9rem;
+  }
+
+  .trainer-page.session-active .last-note-card h3 {
+    margin: 0 0 4px;
+    font-size: 0.98rem;
+  }
+
+  .trainer-page.session-active .last-note-card p:last-child {
+    font-size: 0.76rem;
+    line-height: 1.25;
   }
 
   .trainer-page.session-active .feedback-card p:last-child {

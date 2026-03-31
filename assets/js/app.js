@@ -21,6 +21,9 @@ const ui = {
   feedbackCard: document.querySelector("#feedback-card"),
   feedbackTitle: document.querySelector("#feedback-title"),
   feedbackBody: document.querySelector("#feedback-body"),
+  lastNoteCard: document.querySelector("#last-note-card"),
+  lastNoteLabel: document.querySelector("#last-note-label"),
+  lastNoteDetail: document.querySelector("#last-note-detail"),
   scoreValue: document.querySelector("#score-value"),
   hudScoreValue: document.querySelector("#hud-score-value"),
   hitsValue: document.querySelector("#hits-value"),
@@ -166,6 +169,15 @@ ui.renderFeedback = ({ tone, title, body }) => {
   ui.feedbackCard.className = `feedback-card ${tone}`;
   if (ui.feedbackTitle) ui.feedbackTitle.textContent = title;
   if (ui.feedbackBody) ui.feedbackBody.textContent = body;
+};
+
+ui.renderLastNote = ({ tone, label, detail }) => {
+  if (!ui.lastNoteCard) {
+    return;
+  }
+  ui.lastNoteCard.className = `last-note-card ${tone}`;
+  if (ui.lastNoteLabel) ui.lastNoteLabel.textContent = label;
+  if (ui.lastNoteDetail) ui.lastNoteDetail.textContent = detail;
 };
 
 ui.setSessionActive = (active) => {

@@ -2,13 +2,14 @@
 
 Aplicación web estática para practicar lectura de notas en pentagrama para piano, en español, pensada para desplegarse directamente en GitHub Pages.
 
-La rama principal corresponde a la iteración `v2`: flujo continuo, más directo y más orientado a juego móvil. La `v1.0` queda preservada en su tag.
+La rama principal corresponde a la iteración `v2.5`: flujo continuo, más directo y más orientado a juego móvil. La `v2.1` es la base publicada anterior y la `v1.0` queda preservada en su tag.
 
 ## Qué hace
 
 - Entrena **clave de sol** y **clave de fa**.
-- Usa una **línea vertical animada** que avanza hacia la nota objetivo.
+- Mantiene una **barra vertical fija en el centro** mientras la nota se desplaza de derecha a izquierda.
 - Encadena notas de forma **continua**, sin pulsar "siguiente".
+- Destaca de forma clara la **última nota resuelta**, en verde o rojo según acierto o fallo.
 - Permite responder con el nombre correcto de la nota, incluyendo **sostenidos** y **bemoles** en niveles avanzados.
 - Suma **+10 puntos** por acierto y resta **-5** por fallo.
 - Guarda mejores sesiones en **localStorage**.
@@ -77,4 +78,4 @@ http://localhost:8080
 
 ## Idea pedagógica
 
-La intención es asociar visualmente la posición de cada nota con su nombre real, no solo memorizar botones. En `v2` eso ocurre con un ritmo más seguido, más cercano a una app de entrenamiento móvil, pero manteniendo el feedback pedagógico tras cada acierto o fallo.
+La intención es asociar visualmente la posición de cada nota con su nombre real, no solo memorizar botones. En `v2.5` eso ocurre con una barra fija y notas que fluyen hacia ella, más cercano a un carril rítmico móvil, pero manteniendo el feedback pedagógico tras cada acierto o fallo.

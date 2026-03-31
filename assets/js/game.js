@@ -1,5 +1,5 @@
 import { LEVELS, MODE_CONFIG } from "./levels.js";
-import { describeNotePosition, parseNote, renderStaff } from "./staff.js";
+import { TARGET_NOTE_PROGRESS, describeNotePosition, parseNote, renderStaff } from "./staff.js";
 
 const NOTE_LABELS = {
   C: { title: "Do", subtitle: "C" },
@@ -53,6 +53,19 @@ function modeResponseWindow(modeId, level) {
   return level.responseWindowMs ?? Math.round(level.lineDurationMs * 0.8);
 }
 
+function noteProgressFromElapsed(elapsed, duration) {
+  return duration <= 0 ? 1 : Math.max(0, Math.min(1, elapsed / duration));
+}
+
+function flyingNoteProgress(elapsed, duration) {
+  return TARGET_NOTE_PROGRESS * noteProgressFromElapsed(elapsed, duration);
+}
+
+function answeringNoteProgress(elapsed, duration) {
+  const progress = noteProgressFromElapsed(elapsed, duration);
+  return TARGET_NOTE_PROGRESS + (1 - TARGET_NOTE_PROGRESS) * progress;
+}
+
 export class StaffTrainerGame {
   constructor({ ui, storage }) {
     this.ui = ui;
@@ -78,14 +91,19 @@ export class StaffTrainerGame {
     this.ui.renderBest(this.getLevelBest());
     this.ui.renderAnswerButtons(this.level.answerSet, null, true);
     this.ui.setSessionActive(false);
-    this.ui.updateStatus("Pulsa empezar para arrancar una sesión continua.");
+    this.ui.updateStatus("Pulsa empezar para lanzar notas hacia la barra central.");
     this.ui.updateRoundHeading("Listo para empezar", this.level.name, "Clave: -");
     this.ui.renderFeedback({
       tone: "neutral",
       title: "Sesión preparada",
-      body: "Las notas irán encadenadas. Responde abajo y la siguiente aparecerá sola.",
+      body: "Las notas cruzarán el pentagrama de derecha a izquierda. Responde cuando pasen por la barra central.",
     });
-    renderStaff(this.ui.staffSvg, { noteId: "E4", clef: "treble", lineProgress: 0 });
+    this.ui.renderLastNote({
+      tone: "neutral",
+      label: "Sin notas resueltas",
+      detail: "Aquí verás la última nota acertada o fallada.",
+    });
+    renderStaff(this.ui.staffSvg, { noteId: "E4", clef: "treble", noteProgress: 0.22, phase: "idle" });
   }
 
   createEmptySession() {
@@ -126,6 +144,14 @@ export class StaffTrainerGame {
       title: this.level.name,
       body: this.level.description,
     });
+    if (!this.isSessionActive) {
+      this.ui.renderLastNote({
+        tone: "neutral",
+        label: "Sin notas resueltas",
+        detail: "La última respuesta aparecerá destacada aquí.",
+      });
+      renderStaff(this.ui.staffSvg, { noteId: "E4", clef: "treble", noteProgress: 0.22, phase: "idle" });
+    }
   }
 
   startSession() {
@@ -134,6 +160,11 @@ export class StaffTrainerGame {
     this.ui.setSessionActive(true);
     this.ui.renderStats(this.session);
     this.ui.updateStatus("Sesión en marcha. Las notas seguirán entrando sin pausas.");
+    this.ui.renderLastNote({
+      tone: "neutral",
+      label: "Esperando la primera respuesta",
+      detail: "La última nota resuelta aparecerá aquí en verde o rojo.",
+    });
     this.nextRound();
   }
 
@@ -148,7 +179,7 @@ export class StaffTrainerGame {
     this.ui.updateStatus(
       hadProgress
         ? "Sesión cerrada. Pulsa empezar para volver al modo juego."
-        : "Pulsa empezar para arrancar una sesión continua.",
+        : "Pulsa empezar para lanzar notas hacia la barra central.",
     );
     this.ui.renderFeedback({
       tone: "neutral",
@@ -157,7 +188,12 @@ export class StaffTrainerGame {
         ? "Has salido del modo juego. Puedes reiniciar cuando quieras."
         : "Al empezar, la página se centrará en la partida y dejará solo el HUD esencial.",
     });
-    renderStaff(this.ui.staffSvg, { noteId: "E4", clef: "treble", lineProgress: 0 });
+    this.ui.renderLastNote({
+      tone: "neutral",
+      label: "Sin notas resueltas",
+      detail: "La última respuesta aparecerá destacada aquí.",
+    });
+    renderStaff(this.ui.staffSvg, { noteId: "E4", clef: "treble", noteProgress: 0.22, phase: "idle" });
   }
 
   nextRound() {
@@ -170,38 +206,65 @@ export class StaffTrainerGame {
       this.level.name,
       `Clave: ${this.round.clef === "treble" ? "Sol" : "Fa"}`,
     );
-    this.ui.updateStatus("La línea avanza. Prepárate para tocar la respuesta correcta.");
+    this.ui.updateStatus("La nota entra por la derecha. Toca cuando cruce la barra central.");
     this.animateLine();
   }
 
   animateLine() {
-    const duration = this.level.lineDurationMs;
+    const flightDuration = this.level.lineDurationMs;
+    const responseWindow = modeResponseWindow(this.mode.id, this.level) ?? Math.round(flightDuration * 0.5);
     const startTime = performance.now();
     const loop = (now) => {
-      const progress = Math.min((now - startTime) / duration, 1);
+      const elapsed = now - startTime;
+      const stillFlying = elapsed < flightDuration;
       renderStaff(this.ui.staffSvg, {
         noteId: this.round.noteId,
         clef: this.round.clef,
-        lineProgress: progress,
+        noteProgress: flyingNoteProgress(elapsed, flightDuration),
+        phase: "flying",
+        tone: "neutral",
+        showTargetGlow: false,
       });
 
-      if (progress < 1) {
+      if (stillFlying) {
         this.lineAnimationId = requestAnimationFrame(loop);
         return;
       }
 
-      this.onLineArrived();
+      this.onLineArrived(responseWindow, startTime + flightDuration);
     };
 
     this.lineAnimationId = requestAnimationFrame(loop);
   }
 
-  onLineArrived() {
+  onLineArrived(responseWindow, answerStartTime) {
     this.roundState = "answering";
     this.ui.renderAnswerButtons(this.level.answerSet, null, false);
-    this.ui.updateStatus("Ahora: pulsa la nota correcta.");
+    this.ui.updateStatus("Ahora: la nota ya está en la barra. Responde antes de que se escape.");
 
-    const responseWindow = modeResponseWindow(this.mode.id, this.level);
+    const loop = (now) => {
+      const elapsed = now - answerStartTime;
+      const progress = answeringNoteProgress(elapsed, responseWindow);
+      renderStaff(this.ui.staffSvg, {
+        noteId: this.round.noteId,
+        clef: this.round.clef,
+        noteProgress: progress,
+        phase: "answering",
+        tone: "active",
+        showTargetGlow: true,
+      });
+
+      if (progress < 1 && this.roundState === "answering") {
+        this.lineAnimationId = requestAnimationFrame(loop);
+        return;
+      }
+
+      if (this.roundState === "answering") {
+        this.registerMiss("Tiempo agotado");
+      }
+    };
+
+    this.lineAnimationId = requestAnimationFrame(loop);
     if (responseWindow) {
       this.answerTimeoutId = window.setTimeout(() => {
         this.registerMiss("Tiempo agotado");
@@ -225,6 +288,7 @@ export class StaffTrainerGame {
       this.roundState = "resolved";
       this.ui.renderAnswerButtons(this.level.answerSet, answer, true, this.round.answerKey);
       this.emitFeedback(true, answer);
+      this.renderResolvedNote(true);
       this.afterResolvedRound();
       return;
     }
@@ -236,6 +300,7 @@ export class StaffTrainerGame {
     this.roundState = "resolved";
     this.ui.renderAnswerButtons(this.level.answerSet, answer, true, this.round.answerKey);
     this.emitFeedback(false, answer);
+    this.renderResolvedNote(false);
     this.afterResolvedRound();
   }
 
@@ -251,6 +316,7 @@ export class StaffTrainerGame {
     this.roundState = "resolved";
     this.ui.renderAnswerButtons(this.level.answerSet, null, true, this.round.answerKey);
     this.emitFeedback(false, null, reason);
+    this.renderResolvedNote(false);
     this.afterResolvedRound();
   }
 
@@ -262,10 +328,15 @@ export class StaffTrainerGame {
     if (correct) {
       this.ui.renderFeedback({
         tone: "success",
-        title: `Correcto: ${correctLabel.title}`,
-        body: `${position.label} en clave de ${position.clefLabel.toLowerCase()}. Está en ${position.positionText}.`,
+        title: `Acierto +10 · ${correctLabel.title}`,
+        body: `${position.label} en clave de ${position.clefLabel.toLowerCase()}. Ha cruzado la barra en ${position.positionText}.`,
       });
-      this.ui.updateStatus("Acierto. La siguiente nota ya viene.");
+      this.ui.renderLastNote({
+        tone: "success",
+        label: `Última nota correcta: ${correctLabel.title}`,
+        detail: `${position.label} · clave de ${position.clefLabel.toLowerCase()} · ${position.positionText}`,
+      });
+      this.ui.updateStatus("Acierto. La siguiente nota ya está entrando.");
       return;
     }
 
@@ -274,10 +345,28 @@ export class StaffTrainerGame {
       : `Has marcado ${selectedLabel?.title ?? "una respuesta incorrecta"}.`;
     this.ui.renderFeedback({
       tone: "error",
-      title: `Era ${correctLabel.title}`,
+      title: `Fallo -5 · era ${correctLabel.title}`,
       body: `${failureLead} Esta nota corresponde a ${position.label} en clave de ${position.clefLabel.toLowerCase()} y se ubica en ${position.positionText}.`,
     });
-    this.ui.updateStatus("Fallo. Revisa el feedback mientras entra la siguiente.");
+    this.ui.renderLastNote({
+      tone: "error",
+      label: `Última nota fallada: ${correctLabel.title}`,
+      detail: `${position.label} · clave de ${position.clefLabel.toLowerCase()} · ${position.positionText}`,
+    });
+    this.ui.updateStatus("Fallo. Mira la nota correcta mientras entra la siguiente.");
+  }
+
+  renderResolvedNote(correct) {
+    window.clearTimeout(this.answerTimeoutId);
+    cancelAnimationFrame(this.lineAnimationId);
+    renderStaff(this.ui.staffSvg, {
+      noteId: this.round.noteId,
+      clef: this.round.clef,
+      noteProgress: TARGET_NOTE_PROGRESS,
+      phase: "resolved",
+      tone: correct ? "success" : "error",
+      showTargetGlow: true,
+    });
   }
 
   afterResolvedRound() {

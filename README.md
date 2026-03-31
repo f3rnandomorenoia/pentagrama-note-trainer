@@ -14,6 +14,7 @@ La rama principal corresponde a la iteración `v2`: flujo continuo, más directo
 - Guarda mejores sesiones en **localStorage**.
 - Incluye **modo práctica** y **modo desafío**.
 - Presenta **botones compactos táctiles** pensados para pantallas estrechas.
+- Al pulsar **Empezar sesión**, cada nivel entra en un **modo juego enfocado** que reduce el resto del chrome en móvil.
 - Da feedback pedagógico sobre la posición de la nota en línea, espacio o línea adicional.
 
 ## Estructura del proyecto
@@ -47,7 +48,7 @@ La rama principal corresponde a la iteración `v2`: flujo continuo, más directo
 4. **Nivel 4** — rango ampliado con líneas adicionales
 5. **Nivel 5** — alteraciones (sostenidos y bemoles)
 
-Cada nivel tiene su propia página HTML, pero todos comparten el mismo JavaScript y CSS.
+Cada nivel tiene su propia página HTML, pero todos comparten el mismo JavaScript y CSS. En `v2`, la misma página cambia a un estado de juego enfocado cuando empieza la sesión, con HUD compacto, salida rápida y reinicio sin crear nuevas rutas.
 
 ## Ejecutar localmente
 

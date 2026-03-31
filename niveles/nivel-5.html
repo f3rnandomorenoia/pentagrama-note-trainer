@@ -55,6 +55,7 @@
               <select id="level-select"></select>
               <small class="control-help">Cambiar aquí abre la página HTML de ese nivel.</small>
             </div>
+            <small class="control-help">Al empezar, esta página entra en modo juego y deja solo el HUD esencial.</small>
           </section>
 
           <section>
@@ -89,6 +90,42 @@
         </aside>
 
         <section class="panel play-panel">
+          <div class="game-topbar">
+            <button id="exit-game-button" class="ghost-button" type="button">Salir</button>
+            <div class="game-topbar-copy">
+              <span class="game-topbar-label">Modo juego</span>
+              <strong>Sesión enfocada</strong>
+            </div>
+            <button id="restart-button" class="secondary-button game-topbar-button" type="button">
+              Reiniciar
+            </button>
+          </div>
+
+          <div class="game-hud">
+            <div class="game-hud-main">
+              <span id="mode-chip" class="chip">Modo: -</span>
+              <span id="status-chip" class="chip chip-status">Listo para empezar</span>
+            </div>
+            <div class="game-hud-stats" aria-label="Marcador en partida">
+              <div class="hud-stat">
+                <span>Puntos</span>
+                <strong id="hud-score-value">0</strong>
+              </div>
+              <div class="hud-stat">
+                <span>Aciertos</span>
+                <strong id="hud-hits-value">0</strong>
+              </div>
+              <div class="hud-stat">
+                <span>Fallos</span>
+                <strong id="hud-misses-value">0</strong>
+              </div>
+              <div class="hud-stat">
+                <span>Racha</span>
+                <strong id="hud-streak-value">0</strong>
+              </div>
+            </div>
+          </div>
+
           <div class="play-header">
             <div>
               <p class="play-label">Objetivo actual</p>

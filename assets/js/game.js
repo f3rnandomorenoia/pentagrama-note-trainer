@@ -66,16 +66,18 @@ export class StaffTrainerGame {
     this.answerTimeoutId = null;
     this.nextRoundTimeoutId = null;
     this.bestBook = storage.loadScores();
+    this.isSessionActive = false;
   }
 
   init(settings) {
     this.setMode(settings.mode || "practice");
     this.setLevel(settings.levelId || LEVELS[0].id);
     this.ui.renderLevelOptions(LEVELS, this.level.id);
-    this.ui.renderMode(this.mode.id);
+    this.ui.renderMode(this.mode);
     this.ui.renderStats(this.session);
     this.ui.renderBest(this.getLevelBest());
     this.ui.renderAnswerButtons(this.level.answerSet, null, true);
+    this.ui.setSessionActive(false);
     this.ui.updateStatus("Pulsa empezar para arrancar una sesión continua.");
     this.ui.updateRoundHeading("Listo para empezar", this.level.name, "Clave: -");
     this.ui.renderFeedback({
@@ -105,7 +107,7 @@ export class StaffTrainerGame {
     this.mode = MODE_CONFIG[modeId] || MODE_CONFIG.practice;
     this.storage.saveSettings({ mode: this.mode.id, levelId: this.level.id });
     this.resetRoundFlow();
-    this.ui.renderMode(this.mode.id);
+    this.ui.renderMode(this.mode);
     this.ui.updateStatus(this.mode.description);
   }
 
@@ -128,9 +130,34 @@ export class StaffTrainerGame {
 
   startSession() {
     this.session = this.createEmptySession();
+    this.isSessionActive = true;
+    this.ui.setSessionActive(true);
     this.ui.renderStats(this.session);
     this.ui.updateStatus("Sesión en marcha. Las notas seguirán entrando sin pausas.");
     this.nextRound();
+  }
+
+  stopSession() {
+    const hadProgress = this.session.rounds > 0 || this.session.score !== 0;
+    this.resetRoundFlow();
+    this.round = null;
+    this.isSessionActive = false;
+    this.ui.setSessionActive(false);
+    this.ui.renderAnswerButtons(this.level.answerSet, null, true);
+    this.ui.updateRoundHeading("Listo para empezar", this.level.name, "Clave: -");
+    this.ui.updateStatus(
+      hadProgress
+        ? "Sesión cerrada. Pulsa empezar para volver al modo juego."
+        : "Pulsa empezar para arrancar una sesión continua.",
+    );
+    this.ui.renderFeedback({
+      tone: "neutral",
+      title: hadProgress ? "Sesión cerrada" : "Sesión preparada",
+      body: hadProgress
+        ? "Has salido del modo juego. Puedes reiniciar cuando quieras."
+        : "Al empezar, la página se centrará en la partida y dejará solo el HUD esencial.",
+    });
+    renderStaff(this.ui.staffSvg, { noteId: "E4", clef: "treble", lineProgress: 0 });
   }
 
   nextRound() {
@@ -297,5 +324,8 @@ export class StaffTrainerGame {
     window.clearTimeout(this.answerTimeoutId);
     window.clearTimeout(this.nextRoundTimeoutId);
     this.roundState = "idle";
+    this.lineAnimationId = null;
+    this.answerTimeoutId = null;
+    this.nextRoundTimeoutId = null;
   }
 }

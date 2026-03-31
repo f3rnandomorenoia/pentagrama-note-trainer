@@ -1,5 +1,5 @@
 import { StaffTrainerGame } from "./game.js";
-import { LEVELS } from "./levels.js";
+import { LEVELS, MODE_CONFIG } from "./levels.js";
 import * as storage from "./storage.js";
 
 const PAGE_FILE_BY_LEVEL = Object.fromEntries(LEVELS.map((level) => [level.id, `./${level.id}.html`]));
@@ -13,19 +13,27 @@ const ui = {
   levelLinks: document.querySelector("#level-links"),
   answerButtons: document.querySelector("#answer-buttons"),
   statusText: document.querySelector("#status-text"),
+  statusChip: document.querySelector("#status-chip"),
   roundTitle: document.querySelector("#round-title"),
   levelChip: document.querySelector("#level-chip"),
   clefChip: document.querySelector("#clef-chip"),
+  modeChip: document.querySelector("#mode-chip"),
   feedbackCard: document.querySelector("#feedback-card"),
   feedbackTitle: document.querySelector("#feedback-title"),
   feedbackBody: document.querySelector("#feedback-body"),
   scoreValue: document.querySelector("#score-value"),
+  hudScoreValue: document.querySelector("#hud-score-value"),
   hitsValue: document.querySelector("#hits-value"),
+  hudHitsValue: document.querySelector("#hud-hits-value"),
   missesValue: document.querySelector("#misses-value"),
+  hudMissesValue: document.querySelector("#hud-misses-value"),
   streakValue: document.querySelector("#streak-value"),
+  hudStreakValue: document.querySelector("#hud-streak-value"),
   bestScore: document.querySelector("#best-score"),
   bestRun: document.querySelector("#best-run"),
   bestScoreLabel: document.querySelector("#best-score-label"),
+  restartButton: document.querySelector("#restart-button"),
+  exitGameButton: document.querySelector("#exit-game-button"),
 };
 
 ui.renderLevelOptions = (levels, selectedId) => {
@@ -57,17 +65,24 @@ ui.renderLevelLinks = (levels, currentId) => {
     .join("");
 };
 
-ui.renderMode = (modeId) => {
+ui.renderMode = (mode) => {
   if (ui.modeSelect) {
-    ui.modeSelect.value = modeId;
+    ui.modeSelect.value = mode.id;
+  }
+  if (ui.modeChip) {
+    ui.modeChip.textContent = `Modo: ${mode.label}`;
   }
 };
 
 ui.renderStats = (session) => {
   if (ui.scoreValue) ui.scoreValue.textContent = session.score;
+  if (ui.hudScoreValue) ui.hudScoreValue.textContent = session.score;
   if (ui.hitsValue) ui.hitsValue.textContent = session.hits;
+  if (ui.hudHitsValue) ui.hudHitsValue.textContent = session.hits;
   if (ui.missesValue) ui.missesValue.textContent = session.misses;
+  if (ui.hudMissesValue) ui.hudMissesValue.textContent = session.misses;
   if (ui.streakValue) ui.streakValue.textContent = session.streak;
+  if (ui.hudStreakValue) ui.hudStreakValue.textContent = session.streak;
 };
 
 ui.renderBest = (best) => {
@@ -131,6 +146,9 @@ ui.updateStatus = (text) => {
   if (ui.statusText) {
     ui.statusText.textContent = text;
   }
+  if (ui.statusChip) {
+    ui.statusChip.textContent = text;
+  }
 };
 
 ui.updateRoundHeading = (title, levelText, clefText) => {
@@ -146,6 +164,10 @@ ui.renderFeedback = ({ tone, title, body }) => {
   ui.feedbackCard.className = `feedback-card ${tone}`;
   if (ui.feedbackTitle) ui.feedbackTitle.textContent = title;
   if (ui.feedbackBody) ui.feedbackBody.textContent = body;
+};
+
+ui.setSessionActive = (active) => {
+  document.body.classList.toggle("session-active", active);
 };
 
 ui.renderLevelLinks(LEVELS, pageLevelId);
@@ -165,9 +187,24 @@ if (ui.startButton) {
   });
 }
 
+if (ui.restartButton) {
+  ui.restartButton.addEventListener("click", () => {
+    game.startSession();
+  });
+}
+
+if (ui.exitGameButton) {
+  ui.exitGameButton.addEventListener("click", () => {
+    game.stopSession();
+  });
+}
+
 if (ui.modeSelect) {
   ui.modeSelect.addEventListener("change", (event) => {
-    game.setMode(event.target.value);
+    const mode = MODE_CONFIG[event.target.value];
+    if (mode) {
+      game.setMode(mode.id);
+    }
   });
 }
 

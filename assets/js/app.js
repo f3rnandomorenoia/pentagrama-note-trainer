@@ -107,20 +107,20 @@ ui.updateBestLabel = (levelName) => {
 };
 
 const answerMeta = {
-  C: { title: "Do", subtitle: "Letra C" },
-  "C#": { title: "Do sostenido", subtitle: "C#" },
-  Db: { title: "Re bemol", subtitle: "Db" },
-  D: { title: "Re", subtitle: "Letra D" },
-  Eb: { title: "Mi bemol", subtitle: "Eb" },
-  E: { title: "Mi", subtitle: "Letra E" },
-  F: { title: "Fa", subtitle: "Letra F" },
-  "F#": { title: "Fa sostenido", subtitle: "F#" },
-  Gb: { title: "Sol bemol", subtitle: "Gb" },
-  G: { title: "Sol", subtitle: "Letra G" },
-  Ab: { title: "La bemol", subtitle: "Ab" },
-  A: { title: "La", subtitle: "Letra A" },
-  Bb: { title: "Si bemol", subtitle: "Bb" },
-  B: { title: "Si", subtitle: "Letra B" },
+  C: { title: "Do", subtitle: "Letra C", short: "Do" },
+  "C#": { title: "Do sostenido", subtitle: "C#", short: "C#" },
+  Db: { title: "Re bemol", subtitle: "Db", short: "Db" },
+  D: { title: "Re", subtitle: "Letra D", short: "Re" },
+  Eb: { title: "Mi bemol", subtitle: "Eb", short: "Eb" },
+  E: { title: "Mi", subtitle: "Letra E", short: "Mi" },
+  F: { title: "Fa", subtitle: "Letra F", short: "Fa" },
+  "F#": { title: "Fa sostenido", subtitle: "F#", short: "F#" },
+  Gb: { title: "Sol bemol", subtitle: "Gb", short: "Gb" },
+  G: { title: "Sol", subtitle: "Letra G", short: "Sol" },
+  Ab: { title: "La bemol", subtitle: "Ab", short: "Ab" },
+  A: { title: "La", subtitle: "Letra A", short: "La" },
+  Bb: { title: "Si bemol", subtitle: "Bb", short: "Bb" },
+  B: { title: "Si", subtitle: "Letra B", short: "Si" },
 };
 
 ui.renderAnswerButtons = (answers, selectedAnswer, disabled = false, correctAnswer = null) => {
@@ -129,6 +129,7 @@ ui.renderAnswerButtons = (answers, selectedAnswer, disabled = false, correctAnsw
   }
 
   ui.answerButtons.innerHTML = "";
+  ui.answerButtons.dataset.answerCount = String(answers.length);
   answers.forEach((answer) => {
     const button = document.createElement("button");
     const isCorrect = correctAnswer && answer === correctAnswer;
@@ -137,7 +138,8 @@ ui.renderAnswerButtons = (answers, selectedAnswer, disabled = false, correctAnsw
     button.type = "button";
     button.disabled = disabled;
     button.dataset.answer = answer;
-    button.innerHTML = `<strong>${answerMeta[answer].title}</strong><span>${answerMeta[answer].subtitle}</span>`;
+    button.setAttribute("aria-label", answerMeta[answer].title);
+    button.innerHTML = `<strong data-short="${answerMeta[answer].short}">${answerMeta[answer].title}</strong><span>${answerMeta[answer].subtitle}</span>`;
     ui.answerButtons.append(button);
   });
 };

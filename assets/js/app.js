@@ -8,7 +8,6 @@ const pageLevelId = document.body.dataset.levelId || null;
 const ui = {
   staffSvg: document.querySelector("#staff-svg"),
   startButton: document.querySelector("#start-button"),
-  nextButton: document.querySelector("#next-button"),
   modeSelect: document.querySelector("#mode-select"),
   levelSelect: document.querySelector("#level-select"),
   levelLinks: document.querySelector("#level-links"),
@@ -149,12 +148,6 @@ ui.renderFeedback = ({ tone, title, body }) => {
   if (ui.feedbackBody) ui.feedbackBody.textContent = body;
 };
 
-ui.toggleNextButton = (enabled) => {
-  if (ui.nextButton) {
-    ui.nextButton.disabled = !enabled;
-  }
-};
-
 ui.renderLevelLinks(LEVELS, pageLevelId);
 
 const game = new StaffTrainerGame({ ui, storage });
@@ -169,12 +162,6 @@ game.init(initialSettings);
 if (ui.startButton) {
   ui.startButton.addEventListener("click", () => {
     game.startSession();
-  });
-}
-
-if (ui.nextButton) {
-  ui.nextButton.addEventListener("click", () => {
-    game.nextRound();
   });
 }
 

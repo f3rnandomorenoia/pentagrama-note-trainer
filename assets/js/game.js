@@ -64,6 +64,7 @@ export class StaffTrainerGame {
     this.roundState = "idle";
     this.lineAnimationId = null;
     this.answerTimeoutId = null;
+    this.nextRoundTimeoutId = null;
     this.bestBook = storage.loadScores();
   }
 
@@ -75,12 +76,12 @@ export class StaffTrainerGame {
     this.ui.renderStats(this.session);
     this.ui.renderBest(this.getLevelBest());
     this.ui.renderAnswerButtons(this.level.answerSet, null, true);
-    this.ui.updateStatus("Pulsa empezar para lanzar tu primera nota.");
-    this.ui.updateRoundHeading("Esperando nueva ronda", this.level.name, "Clave: -");
+    this.ui.updateStatus("Pulsa empezar para arrancar una sesión continua.");
+    this.ui.updateRoundHeading("Listo para empezar", this.level.name, "Clave: -");
     this.ui.renderFeedback({
       tone: "neutral",
-      title: "Listo para practicar",
-      body: "La app te dirá el nombre de cada nota y su posición en línea o espacio.",
+      title: "Sesión preparada",
+      body: "Las notas irán encadenadas. Responde abajo y la siguiente aparecerá sola.",
     });
     renderStaff(this.ui.staffSvg, { noteId: "E4", clef: "treble", lineProgress: 0 });
   }
@@ -117,7 +118,7 @@ export class StaffTrainerGame {
     this.ui.renderAnswerButtons(this.level.answerSet, null, true);
     this.ui.renderBest(this.getLevelBest());
     this.ui.updateBestLabel(this.level.name);
-    this.ui.updateRoundHeading("Esperando nueva ronda", this.level.name, "Clave: -");
+    this.ui.updateRoundHeading("Listo para empezar", this.level.name, "Clave: -");
     this.ui.renderFeedback({
       tone: "neutral",
       title: this.level.name,
@@ -128,7 +129,7 @@ export class StaffTrainerGame {
   startSession() {
     this.session = this.createEmptySession();
     this.ui.renderStats(this.session);
-    this.ui.updateStatus("Sesión en marcha. Observa el pentagrama y responde al llegar la línea.");
+    this.ui.updateStatus("Sesión en marcha. Las notas seguirán entrando sin pausas.");
     this.nextRound();
   }
 
@@ -138,11 +139,11 @@ export class StaffTrainerGame {
     this.roundState = "flying";
     this.ui.renderAnswerButtons(this.level.answerSet, null, true);
     this.ui.updateRoundHeading(
-      `${this.mode.label} en curso`,
+      `${this.mode.label} en marcha`,
       this.level.name,
       `Clave: ${this.round.clef === "treble" ? "Sol" : "Fa"}`,
     );
-    this.ui.updateStatus("La línea está avanzando. Prepárate para responder.");
+    this.ui.updateStatus("La línea avanza. Prepárate para tocar la respuesta correcta.");
     this.animateLine();
   }
 
@@ -171,7 +172,7 @@ export class StaffTrainerGame {
   onLineArrived() {
     this.roundState = "answering";
     this.ui.renderAnswerButtons(this.level.answerSet, null, false);
-    this.ui.updateStatus("Ahora: pulsa el nombre correcto de la nota.");
+    this.ui.updateStatus("Ahora: pulsa la nota correcta.");
 
     const responseWindow = modeResponseWindow(this.mode.id, this.level);
     if (responseWindow) {
@@ -237,7 +238,7 @@ export class StaffTrainerGame {
         title: `Correcto: ${correctLabel.title}`,
         body: `${position.label} en clave de ${position.clefLabel.toLowerCase()}. Está en ${position.positionText}.`,
       });
-      this.ui.updateStatus("Acierto. Puedes continuar con la siguiente nota.");
+      this.ui.updateStatus("Acierto. La siguiente nota ya viene.");
       return;
     }
 
@@ -249,22 +250,23 @@ export class StaffTrainerGame {
       title: `Era ${correctLabel.title}`,
       body: `${failureLead} Esta nota corresponde a ${position.label} en clave de ${position.clefLabel.toLowerCase()} y se ubica en ${position.positionText}.`,
     });
-    this.ui.updateStatus("Ronda cerrada. Revisa el feedback y pasa a la siguiente.");
+    this.ui.updateStatus("Fallo. Revisa el feedback mientras entra la siguiente.");
   }
 
   afterResolvedRound() {
     this.syncBestScores();
     this.ui.renderStats(this.session);
     this.ui.renderBest(this.getLevelBest());
-    this.ui.toggleNextButton(true);
+    this.queueNextRound();
+  }
 
-    if (this.mode.id === "challenge") {
-      window.setTimeout(() => {
-        if (this.roundState === "resolved") {
-          this.nextRound();
-        }
-      }, 1100);
-    }
+  queueNextRound() {
+    const delay = this.mode.id === "challenge" ? 800 : 1250;
+    this.nextRoundTimeoutId = window.setTimeout(() => {
+      if (this.roundState === "resolved") {
+        this.nextRound();
+      }
+    }, delay);
   }
 
   syncBestScores() {
@@ -293,7 +295,7 @@ export class StaffTrainerGame {
   resetRoundFlow() {
     cancelAnimationFrame(this.lineAnimationId);
     window.clearTimeout(this.answerTimeoutId);
+    window.clearTimeout(this.nextRoundTimeoutId);
     this.roundState = "idle";
-    this.ui.toggleNextButton(false);
   }
 }

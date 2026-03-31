@@ -69,13 +69,13 @@ export const MODE_CONFIG = {
   practice: {
     id: "practice",
     label: "Práctica guiada",
-    description: "Feedback detallado, sin tiempo límite para responder después de la llegada.",
+    description: "Flujo continuo con feedback detallado y un ritmo algo más amable.",
     responseWindowMultiplier: null,
   },
   challenge: {
     id: "challenge",
     label: "Desafío",
-    description: "Ritmo continuo y penalización si dejas pasar la nota.",
+    description: "Flujo continuo más rápido, con penalización si dejas pasar la nota.",
     responseWindowMultiplier: 1,
   },
 };

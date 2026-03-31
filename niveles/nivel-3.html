@@ -81,10 +81,9 @@
 
           <section>
             <h2>Estado</h2>
-            <p id="status-text" class="status-text">Pulsa empezar para lanzar tu primera nota.</p>
+            <p id="status-text" class="status-text">Pulsa empezar para arrancar una sesión continua.</p>
             <div class="button-row">
-              <button id="start-button" class="primary-button">Empezar</button>
-              <button id="next-button" class="secondary-button" disabled>Siguiente nota</button>
+              <button id="start-button" class="primary-button">Empezar sesión</button>
             </div>
           </section>
         </aside>
@@ -93,7 +92,7 @@
           <div class="play-header">
             <div>
               <p class="play-label">Objetivo actual</p>
-              <h2 id="round-title">Esperando nueva ronda</h2>
+              <h2 id="round-title">Listo para empezar</h2>
             </div>
             <div class="chip-row">
               <span id="clef-chip" class="chip">Clave: -</span>
@@ -103,21 +102,21 @@
 
           <div class="staff-stage">
             <svg id="staff-svg" viewBox="0 0 760 260" role="img" aria-label="Pentagrama con una nota objetivo"></svg>
-            <div class="timing-caption">Responde cuando la línea vertical toque la nota.</div>
+            <div class="timing-caption">La siguiente nota entra sola. Toca abajo cuando la línea alcance el objetivo.</div>
           </div>
 
           <div id="feedback-card" class="feedback-card neutral">
             <p class="feedback-label">Feedback</p>
-            <h3 id="feedback-title">Listo para practicar</h3>
+            <h3 id="feedback-title">Sesión preparada</h3>
             <p id="feedback-body">
-              Verás una nota en el pentagrama y deberás identificarla usando los botones de abajo.
+              Las notas se encadenan automáticamente. Responde abajo y sigue el ritmo.
             </p>
           </div>
 
           <section class="answers-panel">
             <div class="answers-header">
-              <h3>Respuestas</h3>
-              <p id="answers-help">Elige el nombre correcto de la nota cuando llegue la línea.</p>
+              <h3>Controles táctiles</h3>
+              <p id="answers-help">Botones compactos para jugar seguido con el pulgar.</p>
             </div>
             <div id="answer-buttons" class="answer-buttons" aria-live="polite"></div>
           </section>

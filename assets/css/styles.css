@@ -232,6 +232,7 @@ select:hover {
 .play-panel {
   display: grid;
   gap: 18px;
+  align-content: start;
 }
 
 .play-header {
@@ -314,6 +315,13 @@ select:hover {
 .answers-panel {
   display: grid;
   gap: 16px;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(87, 63, 37, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 249, 244, 0.96), rgba(248, 238, 226, 0.92)),
+    rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 28px rgba(70, 43, 19, 0.08);
 }
 
 .answers-header {
@@ -325,28 +333,34 @@ select:hover {
 
 .answer-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 10px;
 }
 
 .answer-button {
-  padding: 14px 16px;
+  min-height: 68px;
+  padding: 10px 12px;
   background: rgba(255, 255, 255, 0.85);
   border-color: rgba(87, 63, 37, 0.12);
   cursor: pointer;
-  text-align: left;
+  text-align: center;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  box-shadow: 0 8px 18px rgba(70, 43, 19, 0.08);
 }
 
 .answer-button strong {
   display: block;
-  font-size: 1.08rem;
+  font-size: 1rem;
+  line-height: 1.1;
 }
 
 .answer-button span {
   display: block;
-  margin-top: 6px;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.78rem;
 }
 
 .answer-button.correct {
@@ -505,6 +519,7 @@ small.control-help {
   .app-shell {
     width: min(100% - 20px, 1200px);
     padding-top: 20px;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
   }
 
   .panel {
@@ -517,6 +532,60 @@ small.control-help {
   .level-links-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .button-row {
+    width: 100%;
+  }
+
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .staff-stage {
+    padding: 14px;
+  }
+
+  .timing-caption {
+    font-size: 0.9rem;
+  }
+
+  .answers-panel {
+    position: sticky;
+    bottom: 10px;
+    z-index: 5;
+    margin-top: 4px;
+    padding: 14px;
+    border-radius: 22px;
+    backdrop-filter: blur(16px);
+  }
+
+  .answers-header h3 {
+    font-size: 1rem;
+  }
+
+  #answers-help {
+    font-size: 0.92rem;
+  }
+
+  .answer-buttons {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .answer-button {
+    min-height: 60px;
+    padding: 8px 6px;
+  }
+
+  .answer-button strong {
+    font-size: 0.96rem;
+  }
+
+  .answer-button span {
+    font-size: 0.72rem;
   }
 
   .stats-grid {

@@ -4,6 +4,12 @@ Aplicación web estática para practicar lectura de notas en pentagrama para pia
 
 La rama principal corresponde a la iteración `v2.5`: flujo continuo, más directo y más orientado a juego móvil. La `v2.1` es la base publicada anterior y la `v1.0` queda preservada en su tag.
 
+## Acceso web
+
+Puedes usar la versión publicada en GitHub Pages aquí:
+
+- https://f3rnandomorenoia.github.io/pentagrama-note-trainer/
+
 ## Qué hace
 
 - Entrena **clave de sol** y **clave de fa**.
@@ -75,6 +81,9 @@ http://localhost:8080
 4. Elige la rama **main** y la carpeta **/ (root)**.
 5. Guarda los cambios.
 6. GitHub publicará la web principal (`index.html`) y desde ahí podrás entrar en cada nivel.
+
+URL actual publicada:
+- https://f3rnandomorenoia.github.io/pentagrama-note-trainer/
 
 ## Idea pedagógica
 

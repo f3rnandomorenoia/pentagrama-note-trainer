@@ -46,24 +46,12 @@ function buildRound(level) {
   };
 }
 
-function modeResponseWindow(modeId, level) {
-  if (modeId !== "challenge") {
-    return null;
-  }
-  return level.responseWindowMs ?? Math.round(level.lineDurationMs * 0.8);
-}
-
 function noteProgressFromElapsed(elapsed, duration) {
   return duration <= 0 ? 1 : Math.max(0, Math.min(1, elapsed / duration));
 }
 
 function flyingNoteProgress(elapsed, duration) {
   return TARGET_NOTE_PROGRESS * noteProgressFromElapsed(elapsed, duration);
-}
-
-function answeringNoteProgress(elapsed, duration) {
-  const progress = noteProgressFromElapsed(elapsed, duration);
-  return TARGET_NOTE_PROGRESS + (1 - TARGET_NOTE_PROGRESS) * progress;
 }
 
 function isRoundAnswerable(roundState) {
@@ -95,12 +83,12 @@ export class StaffTrainerGame {
     this.ui.renderBest(this.getLevelBest());
     this.ui.renderAnswerButtons(this.level.answerSet, null, true);
     this.ui.setSessionActive(false);
-    this.ui.updateStatus("Pulsa empezar para lanzar notas hacia la barra central.");
+    this.ui.updateStatus("Pulsa empezar para lanzar notas hacia la barra central y se quedarán ahí hasta responder.");
     this.ui.updateRoundHeading("Listo para empezar", this.level.name, "Clave: -");
     this.ui.renderFeedback({
       tone: "neutral",
       title: "Sesión preparada",
-      body: "Las notas cruzarán el pentagrama de derecha a izquierda. Puedes responder desde que aparecen o esperar a la barra central.",
+      body: "Las notas cruzarán el pentagrama de derecha a izquierda. Si no respondes antes, se detendrán en la barra central hasta que contestes.",
     });
     this.ui.renderLastNote({
       tone: "neutral",
@@ -163,7 +151,7 @@ export class StaffTrainerGame {
     this.isSessionActive = true;
     this.ui.setSessionActive(true);
     this.ui.renderStats(this.session);
-    this.ui.updateStatus("Sesión en marcha. Las notas seguirán entrando sin pausas.");
+    this.ui.updateStatus("Sesión en marcha. Cada nota avanzará hasta la barra y esperará tu respuesta.");
     this.ui.renderLastNote({
       tone: "neutral",
       label: "Esperando la primera respuesta",
@@ -183,7 +171,7 @@ export class StaffTrainerGame {
     this.ui.updateStatus(
       hadProgress
         ? "Sesión cerrada. Pulsa empezar para volver al modo juego."
-        : "Pulsa empezar para lanzar notas hacia la barra central.",
+        : "Pulsa empezar para lanzar notas hacia la barra central y se quedarán ahí hasta responder.",
     );
     this.ui.renderFeedback({
       tone: "neutral",
@@ -210,13 +198,12 @@ export class StaffTrainerGame {
       this.level.name,
       `Clave: ${this.round.clef === "treble" ? "Sol" : "Fa"}`,
     );
-    this.ui.updateStatus("La nota entra por la derecha. Puedes responder ya o esperar a la barra central.");
+    this.ui.updateStatus("La nota entra por la derecha. Puedes responder ya o esperar a que se detenga en la barra central.");
     this.animateLine();
   }
 
   animateLine() {
     const flightDuration = this.level.lineDurationMs;
-    const responseWindow = modeResponseWindow(this.mode.id, this.level) ?? Math.round(flightDuration * 0.5);
     const startTime = performance.now();
     const loop = (now) => {
       if (this.roundState !== "flying") {
@@ -239,53 +226,28 @@ export class StaffTrainerGame {
         return;
       }
 
-      this.onLineArrived(responseWindow, startTime + flightDuration);
+      this.onLineArrived();
     };
 
     this.lineAnimationId = requestAnimationFrame(loop);
   }
 
-  onLineArrived(responseWindow, answerStartTime) {
+  onLineArrived() {
     if (this.roundState !== "flying") {
       return;
     }
 
     this.roundState = "answering";
     this.ui.renderAnswerButtons(this.level.answerSet, null, false);
-    this.ui.updateStatus("La nota ya está en la barra. Si aún no has respondido, hazlo antes de que se escape.");
-
-    const loop = (now) => {
-      if (this.roundState !== "answering") {
-        return;
-      }
-
-      const elapsed = now - answerStartTime;
-      const progress = answeringNoteProgress(elapsed, responseWindow);
-      renderStaff(this.ui.staffSvg, {
-        noteId: this.round.noteId,
-        clef: this.round.clef,
-        noteProgress: progress,
-        phase: "answering",
-        tone: "active",
-        showTargetGlow: true,
-      });
-
-      if (progress < 1 && this.roundState === "answering") {
-        this.lineAnimationId = requestAnimationFrame(loop);
-        return;
-      }
-
-      if (this.roundState === "answering") {
-        this.registerMiss("Tiempo agotado");
-      }
-    };
-
-    this.lineAnimationId = requestAnimationFrame(loop);
-    if (responseWindow) {
-      this.answerTimeoutId = window.setTimeout(() => {
-        this.registerMiss("Tiempo agotado");
-      }, responseWindow);
-    }
+    this.ui.updateStatus("La nota ya está en la barra. Se queda parada hasta que respondas.");
+    renderStaff(this.ui.staffSvg, {
+      noteId: this.round.noteId,
+      clef: this.round.clef,
+      noteProgress: TARGET_NOTE_PROGRESS,
+      phase: "answering",
+      tone: "active",
+      showTargetGlow: true,
+    });
   }
 
   handleAnswer(answer) {
@@ -343,7 +305,7 @@ export class StaffTrainerGame {
     const selectedLabel = selectedAnswer ? NOTE_LABELS[selectedAnswer] : null;
 
     if (correct) {
-      const timingLead = answeredEarly ? "Respuesta temprana." : "Respuesta en zona objetivo.";
+      const timingLead = answeredEarly ? "Respuesta temprana." : "Respuesta con la nota ya parada en la barra.";
       this.ui.renderFeedback({
         tone: "success",
         title: `Acierto +10 · ${correctLabel.title}`,
@@ -354,7 +316,7 @@ export class StaffTrainerGame {
         label: `Última nota correcta: ${correctLabel.title}`,
         detail: `${position.label} · clave de ${position.clefLabel.toLowerCase()} · ${position.positionText}`,
       });
-      this.ui.updateStatus(answeredEarly ? "Acierto rápido. La nota se resuelve al instante." : "Acierto. La siguiente nota ya está entrando.");
+      this.ui.updateStatus(answeredEarly ? "Acierto rápido. La nota se resuelve al instante." : "Acierto. Preparo la siguiente nota.");
       return;
     }
 
@@ -362,7 +324,7 @@ export class StaffTrainerGame {
       ? `${timeoutReason}.`
       : answeredEarly
         ? `Has respondido antes de la barra con ${selectedLabel?.title ?? "una respuesta incorrecta"}.`
-        : `Has marcado ${selectedLabel?.title ?? "una respuesta incorrecta"}.`;
+        : `Has marcado ${selectedLabel?.title ?? "una respuesta incorrecta"} con la nota ya parada en la barra.`;
     this.ui.renderFeedback({
       tone: "error",
       title: `Fallo -5 · era ${correctLabel.title}`,
@@ -373,7 +335,7 @@ export class StaffTrainerGame {
       label: `Última nota fallada: ${correctLabel.title}`,
       detail: `${position.label} · clave de ${position.clefLabel.toLowerCase()} · ${position.positionText}`,
     });
-    this.ui.updateStatus(answeredEarly ? "Fallo rápido. La nota correcta se muestra ya en la barra." : "Fallo. Mira la nota correcta mientras entra la siguiente.");
+    this.ui.updateStatus(answeredEarly ? "Fallo rápido. La nota correcta se muestra ya en la barra." : "Fallo. Mira la nota correcta antes de la siguiente.");
   }
 
   renderResolvedNote(correct) {

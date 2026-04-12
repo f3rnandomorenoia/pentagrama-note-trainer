@@ -69,13 +69,13 @@ export const MODE_CONFIG = {
   practice: {
     id: "practice",
     label: "Práctica guiada",
-    description: "Flujo continuo con feedback detallado y un ritmo algo más amable.",
+    description: "Ritmo guiado: la nota avanza hasta la barra y se queda esperando tu respuesta.",
     responseWindowMultiplier: null,
   },
   challenge: {
     id: "challenge",
     label: "Desafío",
-    description: "Flujo continuo más rápido, con penalización si dejas pasar la nota.",
+    description: "Ritmo más rápido entre notas, pero cada una se detiene en la barra hasta que respondas.",
     responseWindowMultiplier: 1,
   },
 };

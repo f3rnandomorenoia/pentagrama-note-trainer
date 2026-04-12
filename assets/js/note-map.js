@@ -561,14 +561,6 @@ function triggerNote(noteId, clef) {
 }
 
 function attachPlayable(target, noteId, clef) {
-  const prime = () => {
-    primeNoteAudio(noteId);
-  };
-
-  target.addEventListener("pointerdown", prime, { passive: true });
-  target.addEventListener("touchstart", prime, { passive: true });
-  target.addEventListener("mousedown", prime, { passive: true });
-
   target.addEventListener("click", () => {
     triggerNote(noteId, clef);
   });
@@ -794,16 +786,6 @@ renderLegend();
 CLEF_CONFIG.forEach((config) => {
   renderMap(config.svg, config.clef, config.noteIds);
   renderNoteButtons(config.list, config.noteIds, config.clef);
-});
-
-["pointerdown", "touchstart", "click"].forEach((eventName) => {
-  window.addEventListener(
-    eventName,
-    () => {
-      void unlockAudio();
-    },
-    { passive: true, once: true },
-  );
 });
 
 ALL_NOTE_IDS.forEach((noteId) => {

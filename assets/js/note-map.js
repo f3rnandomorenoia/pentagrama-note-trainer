@@ -56,7 +56,18 @@ const ui = {
   statusBody: document.querySelector("#note-map-status-body"),
 };
 
+const ALL_NOTE_IDS = [...new Set(CLEF_CONFIG.flatMap(({ noteIds }) => noteIds))];
+
 let audioContext = null;
+let unlockPromise = null;
+let pendingPlaybackTasks = [];
+let htmlUnmuteAudio = null;
+let htmlUnmutePromise = null;
+let htmlAudioState = "idle";
+let htmlToneAudioState = "idle";
+let hasPrimedAudio = false;
+const htmlToneDataUriCache = new Map();
+const htmlTonePlayers = new Map();
 
 function createSvgElement(name, attrs = {}) {
   const element = document.createElementNS(SVG_NS, name);
@@ -85,28 +96,409 @@ function frequencyFromNoteId(noteId) {
   return 440 * Math.pow(2, (midiFromNoteId(noteId) - 69) / 12);
 }
 
-async function ensureAudioContext() {
+function isIosWebkitAudioEnvironment() {
+  if (typeof navigator === "undefined" || typeof window === "undefined") {
+    return false;
+  }
+
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const touchPoints = navigator.maxTouchPoints || 0;
+  const isiPhoneOrIPadUA = /iPad|iPhone|iPod/i.test(ua);
+  const isiPadOsDesktopMode = platform === "MacIntel" && touchPoints > 1;
+  const hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
+
+  return hasWebAudio && (isiPhoneOrIPadUA || isiPadOsDesktopMode);
+}
+
+function shouldPreferHtmlAudioPlayback() {
+  return isIosWebkitAudioEnvironment();
+}
+
+function getAudioContext() {
   if (!audioContext) {
     const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtor) {
+      throw new Error("Web Audio API no soportada en este navegador");
+    }
     audioContext = new AudioCtor();
-  }
-  if (audioContext.state === "suspended") {
-    await audioContext.resume();
   }
   return audioContext;
 }
 
-async function playNote(noteId) {
-  const context = await ensureAudioContext();
-  const now = context.currentTime;
+function createSilentAudioDataUri(sampleRate) {
+  const arrayBuffer = new ArrayBuffer(10);
+  const dataView = new DataView(arrayBuffer);
+
+  dataView.setUint32(0, sampleRate, true);
+  dataView.setUint32(4, sampleRate, true);
+  dataView.setUint16(8, 1, true);
+
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+
+  const missingCharacters = window.btoa(binary).slice(0, 13);
+  return `data:audio/wav;base64,UklGRisAAABXQVZFZm10IBAAAAABAAEA${missingCharacters}AgAZGF0YQcAAACAgICAgICAAAA=`;
+}
+
+function ensureHtmlUnmuteAudioElement(ctx) {
+  if (htmlUnmuteAudio || typeof document === "undefined" || !document.createElement) {
+    return htmlUnmuteAudio;
+  }
+
+  const audioEl = document.createElement("audio");
+  audioEl.setAttribute("x-webkit-airplay", "deny");
+  audioEl.preload = "auto";
+  audioEl.loop = true;
+  audioEl.playsInline = true;
+  audioEl.src = createSilentAudioDataUri(typeof ctx.sampleRate === "number" && ctx.sampleRate > 0 ? ctx.sampleRate : 44100);
+  audioEl.load?.();
+  htmlUnmuteAudio = audioEl;
+  return htmlUnmuteAudio;
+}
+
+async function ensureHtmlAudioUnlocked() {
+  if (!isIosWebkitAudioEnvironment()) {
+    htmlAudioState = "not-needed";
+    return true;
+  }
+
+  if (htmlAudioState === "allowed") {
+    return true;
+  }
+
+  if (htmlUnmutePromise) {
+    return htmlUnmutePromise;
+  }
+
+  htmlUnmutePromise = (async () => {
+    try {
+      const ctx = getAudioContext();
+      const audioEl = ensureHtmlUnmuteAudioElement(ctx);
+      if (!audioEl || typeof audioEl.play !== "function") {
+        htmlAudioState = "failed";
+        htmlUnmutePromise = null;
+        return false;
+      }
+
+      htmlAudioState = "pending";
+      await audioEl.play();
+      htmlAudioState = "allowed";
+      return true;
+    } catch {
+      htmlAudioState = "failed";
+      htmlUnmutePromise = null;
+      return false;
+    }
+  })();
+
+  return htmlUnmutePromise;
+}
+
+function primeAudioContext(ctx) {
+  if (hasPrimedAudio) {
+    return;
+  }
+
+  try {
+    const gainNode = ctx.createGain();
+    gainNode.connect(ctx.destination);
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+
+    if (typeof ctx.createBuffer === "function" && typeof ctx.createBufferSource === "function") {
+      const sampleRate = typeof ctx.sampleRate === "number" && ctx.sampleRate > 0 ? ctx.sampleRate : 44100;
+      const buffer = ctx.createBuffer(1, 1, sampleRate);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(gainNode);
+      source.start(ctx.currentTime);
+      hasPrimedAudio = true;
+      return;
+    }
+
+    const oscillator = ctx.createOscillator();
+    oscillator.connect(gainNode);
+    oscillator.frequency.value = 1;
+    oscillator.type = "sine";
+    oscillator.start(ctx.currentTime);
+    hasPrimedAudio = true;
+    oscillator.stop(ctx.currentTime + 0.001);
+  } catch {
+    // ignore
+  }
+}
+
+function isAudioReady(ctx) {
+  const htmlReady = htmlAudioState === "allowed" || htmlAudioState === "not-needed" || !isIosWebkitAudioEnvironment();
+  const htmlToneReady = htmlToneAudioState === "allowed" || htmlToneAudioState === "not-needed" || !shouldPreferHtmlAudioPlayback();
+  return ctx.state === "running" && htmlReady && htmlToneReady;
+}
+
+function flushPendingPlaybackTasks() {
+  if (!audioContext || !isAudioReady(audioContext) || pendingPlaybackTasks.length === 0) {
+    return;
+  }
+
+  const tasks = pendingPlaybackTasks;
+  pendingPlaybackTasks = [];
+  tasks.forEach((task) => {
+    try {
+      task(audioContext);
+    } catch {
+      // ignore individual playback failures
+    }
+  });
+}
+
+function unlockAudio() {
+  let ctx;
+  try {
+    ctx = getAudioContext();
+  } catch {
+    return Promise.resolve(false);
+  }
+
+  if (isAudioReady(ctx)) {
+    flushPendingPlaybackTasks();
+    return Promise.resolve(true);
+  }
+
+  if (unlockPromise) {
+    return unlockPromise;
+  }
+
+  unlockPromise = (async () => {
+    try {
+      const htmlUnlockPromise = ensureHtmlAudioUnlocked();
+      const htmlTonePromise = primeKnownHtmlTonePlayers();
+      primeAudioContext(ctx);
+      if (typeof ctx.resume === "function" && ctx.state !== "running") {
+        await ctx.resume();
+      }
+      await htmlUnlockPromise;
+      await htmlTonePromise;
+    } catch {
+      // ignore and let the next gesture retry
+    }
+
+    if (isAudioReady(ctx)) {
+      flushPendingPlaybackTasks();
+      return true;
+    }
+
+    unlockPromise = null;
+    return false;
+  })();
+
+  return unlockPromise;
+}
+
+function withReadyAudioContext(task) {
+  let ctx;
+  try {
+    ctx = getAudioContext();
+  } catch {
+    return;
+  }
+
+  if (isAudioReady(ctx)) {
+    task(ctx);
+    return;
+  }
+
+  pendingPlaybackTasks.push(task);
+  void unlockAudio();
+}
+
+function createToneAudioDataUri(frequency, durationSeconds = 1.1) {
+  const key = `${frequency}:${durationSeconds}`;
+  const cached = htmlToneDataUriCache.get(key);
+  if (cached) {
+    return cached;
+  }
+
+  const sampleRate = 44100;
+  const totalFrames = Math.max(1, Math.ceil(durationSeconds * sampleRate));
+  const bytesPerSample = 2;
+  const numChannels = 1;
+  const blockAlign = numChannels * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = totalFrames * blockAlign;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+
+  const writeString = (offset, value) => {
+    for (let i = 0; i < value.length; i += 1) {
+      view.setUint8(offset + i, value.charCodeAt(i));
+    }
+  };
+
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeString(36, "data");
+  view.setUint32(40, dataSize, true);
+
+  for (let frame = 0; frame < totalFrames; frame += 1) {
+    const time = frame / sampleRate;
+    const attack = Math.min(0.015, durationSeconds / 4);
+    const release = Math.min(0.12, durationSeconds / 3);
+    const attackGain = attack > 0 ? Math.min(1, time / attack) : 1;
+    const releaseGain = release > 0 ? Math.min(1, (durationSeconds - time) / release) : 1;
+    const envelope = Math.max(0, Math.min(attackGain, releaseGain));
+    const phase = time * frequency * Math.PI * 2;
+    const triangle = (2 / Math.PI) * Math.asin(Math.sin(phase));
+    const sine = Math.sin(phase * 2);
+    const mixed = (triangle * 0.84 + sine * 0.12) * 0.42 * envelope;
+    const clamped = Math.max(-1, Math.min(1, mixed));
+    view.setInt16(44 + frame * 2, clamped * 0x7fff, true);
+  }
+
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+
+  const dataUri = `data:audio/wav;base64,${window.btoa(binary)}`;
+  htmlToneDataUriCache.set(key, dataUri);
+  return dataUri;
+}
+
+function ensureHtmlToneEntry(noteId) {
+  const existing = htmlTonePlayers.get(noteId);
+  if (existing) {
+    return existing;
+  }
+
+  if (typeof document === "undefined" || !document.createElement) {
+    const emptyEntry = { noteId, players: [], nextIndex: 0, primed: false };
+    htmlTonePlayers.set(noteId, emptyEntry);
+    return emptyEntry;
+  }
+
+  const frequency = frequencyFromNoteId(noteId);
+  const src = createToneAudioDataUri(frequency);
+  const players = Array.from({ length: 2 }, () => {
+    const audioEl = document.createElement("audio");
+    audioEl.setAttribute("x-webkit-airplay", "deny");
+    audioEl.preload = "auto";
+    audioEl.loop = false;
+    audioEl.playsInline = true;
+    audioEl.src = src;
+    audioEl.load?.();
+    return audioEl;
+  });
+
+  const entry = { noteId, players, nextIndex: 0, primed: false };
+  htmlTonePlayers.set(noteId, entry);
+  return entry;
+}
+
+async function primeHtmlToneEntry(entry) {
+  if (!shouldPreferHtmlAudioPlayback()) {
+    htmlToneAudioState = "not-needed";
+    return true;
+  }
+
+  if (entry.primed) {
+    htmlToneAudioState = "allowed";
+    return true;
+  }
+
+  if (!entry.players.length) {
+    htmlToneAudioState = "failed";
+    return false;
+  }
+
+  htmlToneAudioState = "pending";
+  let primedCount = 0;
+  for (const audioEl of entry.players) {
+    try {
+      audioEl.muted = true;
+      audioEl.currentTime = 0;
+      const playPromise = audioEl.play?.();
+      if (playPromise && typeof playPromise.then === "function") {
+        await playPromise;
+      }
+      audioEl.pause?.();
+      audioEl.currentTime = 0;
+      audioEl.muted = false;
+      primedCount += 1;
+    } catch {
+      try {
+        audioEl.pause?.();
+        audioEl.currentTime = 0;
+        audioEl.muted = false;
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  entry.primed = primedCount > 0;
+  htmlToneAudioState = entry.primed ? "allowed" : "failed";
+  return entry.primed;
+}
+
+async function primeKnownHtmlTonePlayers() {
+  if (!shouldPreferHtmlAudioPlayback()) {
+    htmlToneAudioState = "not-needed";
+    return true;
+  }
+
+  const entries = ALL_NOTE_IDS.map((noteId) => ensureHtmlToneEntry(noteId));
+  const results = await Promise.all(entries.map((entry) => primeHtmlToneEntry(entry)));
+  const ok = results.some(Boolean);
+  htmlToneAudioState = ok ? "allowed" : "failed";
+  return ok;
+}
+
+function playHtmlTone(noteId) {
+  const entry = ensureHtmlToneEntry(noteId);
+  if (!entry.players.length) {
+    return;
+  }
+
+  const audioEl = entry.players[entry.nextIndex % entry.players.length];
+  entry.nextIndex = (entry.nextIndex + 1) % entry.players.length;
+
+  try {
+    audioEl.pause?.();
+    audioEl.muted = false;
+    audioEl.currentTime = 0;
+    const playPromise = audioEl.play?.();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {
+        // ignore Safari playback rejection after failed interaction windows
+      });
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function playWebAudioTone(ctx, noteId) {
+  const now = ctx.currentTime;
   const baseFrequency = frequencyFromNoteId(noteId);
 
-  const filter = context.createBiquadFilter();
+  const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
   filter.frequency.setValueAtTime(2200, now);
   filter.Q.setValueAtTime(0.8, now);
 
-  const output = context.createGain();
+  const output = ctx.createGain();
   output.gain.setValueAtTime(0.0001, now);
   output.gain.linearRampToValueAtTime(0.22, now + 0.02);
   output.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
@@ -117,8 +509,8 @@ async function playNote(noteId) {
   ];
 
   tones.forEach((tone) => {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
     oscillator.type = tone.type;
     oscillator.frequency.setValueAtTime(baseFrequency * tone.ratio, now);
     gain.gain.setValueAtTime(tone.gain, now);
@@ -129,7 +521,27 @@ async function playNote(noteId) {
   });
 
   filter.connect(output);
-  output.connect(context.destination);
+  output.connect(ctx.destination);
+}
+
+function playNote(noteId) {
+  withReadyAudioContext((ctx) => {
+    if (shouldPreferHtmlAudioPlayback()) {
+      playHtmlTone(noteId);
+      return;
+    }
+
+    playWebAudioTone(ctx, noteId);
+  });
+}
+
+function primeNoteAudio() {
+  void unlockAudio();
+  if (!shouldPreferHtmlAudioPlayback()) {
+    return;
+  }
+
+  void primeKnownHtmlTonePlayers();
 }
 
 function updateStatus(noteId, clef) {
@@ -140,13 +552,23 @@ function updateStatus(noteId, clef) {
 }
 
 function triggerNote(noteId, clef) {
-  playNote(noteId).catch(() => {
+  try {
+    playNote(noteId);
+  } catch {
     ui.statusBody.textContent = "No he podido activar el audio todavía. Prueba a tocar otra nota.";
-  });
+  }
   updateStatus(noteId, clef);
 }
 
 function attachPlayable(target, noteId, clef) {
+  const prime = () => {
+    primeNoteAudio(noteId);
+  };
+
+  target.addEventListener("pointerdown", prime, { passive: true });
+  target.addEventListener("touchstart", prime, { passive: true });
+  target.addEventListener("mousedown", prime, { passive: true });
+
   target.addEventListener("click", () => {
     triggerNote(noteId, clef);
   });
@@ -372,4 +794,18 @@ renderLegend();
 CLEF_CONFIG.forEach((config) => {
   renderMap(config.svg, config.clef, config.noteIds);
   renderNoteButtons(config.list, config.noteIds, config.clef);
+});
+
+["pointerdown", "touchstart", "click"].forEach((eventName) => {
+  window.addEventListener(
+    eventName,
+    () => {
+      void unlockAudio();
+    },
+    { passive: true, once: true },
+  );
+});
+
+ALL_NOTE_IDS.forEach((noteId) => {
+  ensureHtmlToneEntry(noteId);
 });

@@ -17,6 +17,7 @@ const CLEF_META = {
   },
   bass: {
     label: "Fa",
+    symbol: "\uD834\uDD22",
     bottomLine: "G2",
   },
 };
@@ -224,48 +225,15 @@ export function renderStaff(svg, roundState) {
     clefGroup.append(sourceOffsetGroup);
     svg.append(clefGroup);
   } else {
-    const targetFLineY = bottomY - 3 * stepHeight * 2;
-    const mainDotX = 146;
-    const mainDotY = targetFLineY;
-    const tailPath = createSvgElement("path", {
-      d: `M ${mainDotX - 2} ${mainDotY + 1}
-        C ${mainDotX - 24} ${mainDotY - 4}, ${mainDotX - 38} ${mainDotY + 12}, ${mainDotX - 37} ${mainDotY + 31}
-        C ${mainDotX - 36} ${mainDotY + 51}, ${mainDotX - 20} ${mainDotY + 64}, ${mainDotX + 1} ${mainDotY + 60}
-        C ${mainDotX + 18} ${mainDotY + 57}, ${mainDotX + 29} ${mainDotY + 43}, ${mainDotX + 29} ${mainDotY + 27}
-        C ${mainDotX + 29} ${mainDotY + 11}, ${mainDotX + 19} ${mainDotY - 2}, ${mainDotX + 4} ${mainDotY - 5}
-        M ${mainDotX - 4} ${mainDotY}
-        C ${mainDotX - 12} ${mainDotY - 16}, ${mainDotX - 24} ${mainDotY - 24}, ${mainDotX - 38} ${mainDotY - 24}`,
-      fill: "none",
-      stroke: "#2d2118",
-      "stroke-width": 8,
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
+    const clefText = createSvgElement("text", {
+      x: 136,
+      y: 140,
+      "font-size": 88,
+      fill: "#2d2118",
+      "font-family": "serif",
     });
-    svg.append(tailPath);
-    svg.append(
-      createSvgElement("circle", {
-        cx: mainDotX,
-        cy: mainDotY,
-        r: 11,
-        fill: "#2d2118",
-      }),
-    );
-    svg.append(
-      createSvgElement("circle", {
-        cx: 182,
-        cy: targetFLineY - 12,
-        r: 4.6,
-        fill: "#2d2118",
-      }),
-    );
-    svg.append(
-      createSvgElement("circle", {
-        cx: 182,
-        cy: targetFLineY + 12,
-        r: 4.6,
-        fill: "#2d2118",
-      }),
-    );
+    clefText.textContent = CLEF_META[clef].symbol;
+    svg.append(clefText);
   }
 
   const clefLabel = createSvgElement("text", {

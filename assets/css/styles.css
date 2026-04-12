@@ -692,6 +692,103 @@ small.control-help {
   border-color: rgba(181, 82, 45, 0.34);
 }
 
+.note-map-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-bottom: 22px;
+}
+
+.note-map-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.note-map-links {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.note-map-stage {
+  padding-bottom: 12px;
+}
+
+.note-map-svg {
+  width: 100%;
+  display: block;
+}
+
+.note-color-legend,
+.note-map-button-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.note-color-legend {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.note-legend-pill,
+.note-map-button {
+  border-radius: 20px;
+  border: 1px solid rgba(87, 63, 37, 0.12);
+  background: linear-gradient(180deg, var(--note-soft), rgba(255, 255, 255, 0.94));
+  box-shadow: 0 10px 20px rgba(70, 43, 19, 0.08);
+}
+
+.note-legend-pill {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.note-legend-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--note-color);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.74);
+}
+
+.note-legend-pill strong,
+.note-map-button strong {
+  font-size: 1rem;
+}
+
+.note-legend-pill span,
+.note-map-button span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.note-map-button-grid {
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+}
+
+.note-map-button {
+  padding: 12px 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.note-map-button:hover,
+.note-map-button:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(70, 43, 19, 0.12);
+}
+
+.note-map-note:focus-visible {
+  outline: none;
+}
+
+@media (max-width: 980px) {
+  .note-map-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .app-shell {
     width: min(100% - 20px, 1200px);

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mapa de notas · Pentagrama Piano Trainer</title>
+    <meta
+      name="description"
+      content="Pantalla visual y sonora para ver las notas en cada línea y espacio en clave de sol y clave de fa."
+    />
+    <link rel="stylesheet" href="./assets/css/styles.css" />
+  </head>
+  <body class="note-map-page">
+    <div class="app-shell landing-shell">
+      <header class="hero hero-landing">
+        <div>
+          <p class="eyebrow">Referencia visual y sonora</p>
+          <h1>Mapa de notas</h1>
+          <p class="hero-copy">
+            Una pantalla de apoyo para memorizar rápido dónde cae cada nota.
+            Aquí ves las posiciones dentro del pentagrama, cada una con su color,
+            y puedes tocar cualquier nota para escuchar su sonido tanto en clave de sol como en clave de fa.
+          </p>
+        </div>
+        <div class="hero-card">
+          <span class="hero-card-label">Incluye</span>
+          <strong>2</strong>
+          <span class="hero-card-meta">claves completas con líneas y espacios clicables</span>
+        </div>
+      </header>
+
+      <section class="panel level-links-panel">
+        <div class="level-links-head">
+          <div>
+            <p class="eyebrow">Accesos</p>
+            <h2>Ir al juego o usar solo el mapa</h2>
+          </div>
+          <a class="home-link" href="./index.html">← Web principal</a>
+        </div>
+        <div class="level-links note-map-links">
+          <a class="level-link" href="./niveles/nivel-1.html">Entrenar clave de sol</a>
+          <a class="level-link" href="./niveles/nivel-2.html">Entrenar clave de fa</a>
+          <a class="level-link" href="./niveles/nivel-3.html">Mezclar ambas claves</a>
+        </div>
+      </section>
+
+      <section class="panel note-legend-panel">
+        <div class="landing-section-head">
+          <div>
+            <p class="eyebrow">Colores asociados</p>
+            <h2>La misma nota, el mismo color</h2>
+          </div>
+          <p class="landing-section-copy">
+            Toca una nota del pentagrama o uno de los botones de abajo. El color te ayuda a fijar la posición y el sonido a la vez.
+          </p>
+        </div>
+        <div id="note-color-legend" class="note-color-legend" aria-label="Leyenda de colores por nota"></div>
+      </section>
+
+      <main class="note-map-grid">
+        <section class="panel note-map-panel">
+          <div class="play-header note-map-panel-head">
+            <div>
+              <p class="play-label">Mapa 1</p>
+              <h2>Clave de sol</h2>
+            </div>
+            <div class="chip-row">
+              <span class="chip">9 posiciones</span>
+              <span class="chip">Dentro del pentagrama</span>
+            </div>
+          </div>
+          <div class="staff-stage note-map-stage">
+            <svg id="treble-map-svg" class="note-map-svg" viewBox="0 0 760 300" role="img" aria-label="Mapa de notas en clave de sol"></svg>
+            <div class="timing-caption">Cada nota está colocada en su línea o espacio. Tócala para oírla.</div>
+          </div>
+          <div id="treble-note-list" class="note-map-button-grid" aria-label="Notas clicables en clave de sol"></div>
+        </section>
+
+        <section class="panel note-map-panel">
+          <div class="play-header note-map-panel-head">
+            <div>
+              <p class="play-label">Mapa 2</p>
+              <h2>Clave de fa</h2>
+            </div>
+            <div class="chip-row">
+              <span class="chip">9 posiciones</span>
+              <span class="chip">Dentro del pentagrama</span>
+            </div>
+          </div>
+          <div class="staff-stage note-map-stage">
+            <svg id="bass-map-svg" class="note-map-svg" viewBox="0 0 760 300" role="img" aria-label="Mapa de notas en clave de fa"></svg>
+            <div class="timing-caption">Sirve para asociar enseguida la mano izquierda con sus posiciones reales.</div>
+          </div>
+          <div id="bass-note-list" class="note-map-button-grid" aria-label="Notas clicables en clave de fa"></div>
+        </section>
+      </main>
+
+      <section class="panel">
+        <div id="note-map-status" class="feedback-card neutral">
+          <p class="feedback-label">Última nota tocada</p>
+          <h3 id="note-map-status-title">Toca una nota</h3>
+          <p id="note-map-status-body">
+            Al pulsar una nota oirás su altura aproximada y aquí verás su nombre, su clave y la posición que ocupa en el pentagrama.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./assets/js/note-map.js"></script>
+  </body>
+</html>
